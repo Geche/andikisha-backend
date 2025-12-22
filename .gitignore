@@ -1,0 +1,529 @@
+# ================================
+# AndikishaHR - African HR & Payroll SaaS
+# .gitignore - Production Ready
+# Tech Stack: NestJS, PostgreSQL, Prisma, RabbitMQ, gRPC, Docker
+# ================================
+
+# ================================
+# CRITICAL SECURITY - NEVER COMMIT
+# ================================
+
+# Environment Variables (contains DB passwords, API keys)
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+.env.*.local
+
+# Service-specific environment files
+services/*/.env
+services/*/.env.*
+services/**/.env
+services/**/.env.*
+
+# SSH Keys & Certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.p7b
+*.p7c
+*.pkcs12
+
+# API Keys & Secrets (M-PESA, KRA iTax, Africa's Talking, SendGrid)
+secrets/
+.secrets/
+*.secret
+*_secret
+*_secrets
+credentials.json
+service-account.json
+firebase-adminsdk.json
+gcloud-service-key.json
+
+# JWT Tokens & Keys
+*.jwt
+jwtRS256.key
+jwtRS256.key.pub
+public.pem
+private.pem
+jwt-private.key
+jwt-public.key
+
+# Cloud Provider Credentials
+.aws/
+.gcloud/
+.azure/
+
+# ================================
+# Dependencies & Package Managers
+# ================================
+
+# Node modules
+node_modules/
+.pnpm-store/
+.pnp/
+.pnp.js
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Lock files (Choose one strategy):
+# Option A: Commit lock files (recommended for production stability)
+# (No ignores here - commit pnpm-lock.yaml)
+
+# Option B: Ignore lock files (use only if you have issues)
+# Uncomment the line below if needed:
+# pnpm-lock.yaml
+
+# Yarn specific
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ================================
+# Build Outputs & Compiled Files
+# ================================
+
+# Distribution directories
+dist/
+build/
+out/
+.next/
+
+# Service-specific builds
+services/*/dist/
+services/*/build/
+services/**/dist/
+services/**/build/
+
+# Library builds
+libs/*/dist/
+libs/*/build/
+libs/**/dist/
+libs/**/build/
+
+# TypeScript
+*.tsbuildinfo
+.tsbuildinfo
+
+# ================================
+# Database & Prisma
+# ================================
+
+# Local database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+postgres-data/
+pgdata/
+
+# Prisma generated clients (regenerated via prisma generate)
+.prisma/
+node_modules/.prisma/
+services/*/node_modules/.prisma/
+**/node_modules/.prisma/
+
+# Prisma migration SQL files (keep folder structure, ignore content)
+# This preserves migration history while ignoring actual SQL
+**/prisma/migrations/**/migration.sql
+services/*/prisma/migrations/**/migration.sql
+
+# Keep migration directories
+!**/prisma/migrations/
+!**/prisma/migrations/.gitkeep
+!services/*/prisma/migrations/.gitkeep
+
+# Database backups
+*.backup
+*.dump
+*.sql.gz
+
+# ================================
+# Docker & Infrastructure
+# ================================
+
+# Docker volumes and data
+docker/data/
+docker/volumes/
+docker/*.env
+
+# Docker Compose overrides (local development variations)
+docker-compose.override.yml
+docker-compose.*.override.yml
+docker-compose.local.yml
+
+# RabbitMQ
+docker/rabbitmq/definitions.json.backup
+
+# Redis persistence files
+dump.rdb
+appendonly.aof
+*.rdb
+*.aof
+
+# MinIO / S3 local storage
+.minio/
+.minio.sys/
+minio-data/
+
+# ================================
+# Generated Files
+# ================================
+
+# Protocol Buffers (regenerated via proto generation script)
+libs/grpc/src/generated/
+proto/generated/
+*.pb.ts
+*.pb.js
+*_pb.js
+*_pb.d.ts
+*_grpc_pb.js
+*_grpc_pb.d.ts
+
+# GraphQL
+generated/
+__generated__/
+*.generated.ts
+
+# ================================
+# Logs
+# ================================
+
+# Log directories
+logs/
+*.log
+
+# Service-specific logs
+services/*/logs/
+services/*/*.log
+services/**/*.log
+
+# NPM/Yarn/PNPM logs
+#npm-debug.log*
+#yarn-debug.log*
+#pnpm-debug.log*
+
+# Application logs
+error.log
+combined.log
+exceptions.log
+app.log
+access.log
+
+# ================================
+# Testing & Coverage
+# ================================
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Service-specific coverage
+services/*/coverage/
+libs/*/coverage/
+
+# Test results
+junit.xml
+test-results/
+test-report/
+.jest/
+
+# E2E test artifacts
+cypress/videos/
+cypress/screenshots/
+playwright-report/
+#test-results/
+
+# ================================
+# IDE & Editors
+# ================================
+
+# VSCode (keep some configs for team consistency)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# IntelliJ IDEA / WebStorm
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.vim/
+
+# Emacs
+\#*\#
+.\#*
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# NetBeans
+nbproject/
+
+# ================================
+# Operating System Files
+# ================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ================================
+# Temporary & Cache Files
+# ================================
+
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
+*.bak
+*.old
+*.cache
+.cache/
+
+# Service-specific temp
+services/*/tmp/
+services/*/temp/
+
+# ================================
+# Cloud & Deployment
+# ================================
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform.lock.hcl
+crash.log
+
+# Kubernetes
+*.kubeconfig
+*-secret.yaml
+*-secrets.yaml
+k8s-secrets.yaml
+
+# Helm
+.helm/
+
+# Serverless
+.serverless/
+
+# ================================
+# Monitoring & APM
+# ================================
+
+# Sentry
+.sentryclirc
+
+# New Relic
+newrelic_agent.log
+
+# Performance profiling
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# ================================
+# CI/CD
+# ================================
+
+# GitHub Actions artifacts
+.github/workflows/artifacts/
+
+# CircleCI
+.circleci/local/
+
+# GitLab
+.gitlab-ci-local/
+
+# ================================
+# AndikishaHR SPECIFIC
+# ================================
+
+# Payroll Service - SENSITIVE FINANCIAL DATA
+services/payroll-service/exports/
+services/payroll-service/bank-files/
+services/payroll-service/reports/
+services/payroll-service/mpesa-exports/
+
+# Compliance Service - TAX FORMS (Personal Data - Kenya DPA)
+services/compliance-service/reports/
+services/compliance-service/p9-forms/
+services/compliance-service/p10-forms/
+services/compliance-service/kra-exports/
+
+# Employee Service - PERSONAL DATA
+services/employee-service/exports/
+services/employee-service/employee-photos/
+
+# Document Service - SENSITIVE DOCUMENTS
+services/document-service/uploads/
+services/document-service/storage/
+services/document-service/temp-uploads/
+
+# Attendance Service - BIOMETRIC DATA (Highly Sensitive)
+services/attendance-service/biometric-data/
+services/attendance-service/biometric-exports/
+services/attendance-service/fingerprint-data/
+
+# Integration Hub - API LOGS & TRANSACTION DATA
+services/integration-hub-service/integration-logs/
+services/integration-hub-service/mpesa-logs/
+services/integration-hub-service/bank-logs/
+services/integration-hub-service/itax-logs/
+
+# Reporting Service - EXPORTED REPORTS
+services/reporting-service/exports/
+services/reporting-service/reports/
+services/reporting-service/temp-reports/
+
+# Notification Service - MESSAGE LOGS
+services/notification-service/sms-logs/
+services/notification-service/email-logs/
+
+# API Gateway - UPLOADED FILES
+services/api-gateway/uploads/
+services/api-gateway/temp/
+
+# ================================
+# Development & Debugging
+# ================================
+
+# Local development files
+.local/
+local/
+local-data/
+sandbox/
+scratch/
+
+# Debug logs
+debug.log
+*.debug
+
+# Memory dumps
+*.heap
+
+# ================================
+# Documentation
+# ================================
+
+# Generated documentation
+docs/generated/
+.docusaurus/
+storybook-static/
+
+# ================================
+# Miscellaneous
+# ================================
+
+# Backup files
+*.orig
+#*.backup
+*.back
+*~.nib
+
+# Compressed files (unless explicitly needed)
+# *.zip
+# *.tar.gz
+# *.rar
+# *.7z
+
+# Large media files (if any test files exist)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+
+# ================================
+# Package-specific
+# ================================
+
+# Nx (if added later)
+.nx/cache
+.nx/workspace-data
+
+# Turborepo (if added later)
+.turbo
+
+# Rush (if added later)
+common/temp/
+
+# ================================
+# Keep Files (Preserve Empty Directories)
+# ================================
+
+# Keep these directories even if empty
+!.gitkeep
+!**/.gitkeep
+
+# ================================
+# Optional: Whitelist Important Files
+# ================================
+
+# Ensure these are never ignored even if patterns match
+!docker/init-databases.sql
+!.env.example
+!.env.template
+
+# ================================
+# END OF .GITIGNORE
+# ================================

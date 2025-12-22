@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@andikisha/common": ["libs/common/src"],
+      "@andikisha/database": ["libs/database/src"],
+      "@andikisha/rabbitmq": ["libs/rabbitmq/src"],
+      "@andikisha/grpc": ["libs/grpc/src"],
+      "@andikisha/api-gateway": ["services/api-gateway/src"],
+      "@andikisha/auth-service": ["services/auth-service/src"],
+      "@andikisha/employee-service": ["services/employee-service/src"],
+      "@andikisha/payroll-service": ["services/payroll-service/src"],
+      "@andikisha/compliance-service": ["services/compliance-service/src"]
+    }
+  }
+}

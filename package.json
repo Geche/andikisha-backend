@@ -1,0 +1,29 @@
+{
+  "name": "andikisha-hr",
+  "version": "1.0.0",
+  "description": "AndikishaHR - African HR & Payroll Management System",
+  "private": true,
+  "scripts": {
+    "dev:gateway": "pnpm --filter @andikisha/api-gateway dev",
+    "dev:auth": "pnpm --filter @andikisha/auth-service dev",
+    "dev:employee": "pnpm --filter @andikisha/employee-service dev",
+    "dev:payroll": "pnpm --filter @andikisha/payroll-service dev",
+    "dev:compliance": "pnpm --filter @andikisha/compliance-service dev",
+    "dev:all": "pnpm --filter \"./services/**\" dev",
+    "build": "pnpm --filter \"./services/**\" build",
+    "test": "pnpm --filter \"./services/**\" test",
+    "lint": "pnpm --filter \"./services/**\" lint",
+    "format": "prettier --write \"services/**/*.ts\" \"libs/**/*.ts\"",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down",
+    "docker:logs": "docker-compose -f docker/docker-compose.yml logs -f",
+    "proto:generate": "bash scripts/generate-protos.sh"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.3.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  }
+}

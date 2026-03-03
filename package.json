@@ -9,6 +9,7 @@
     "dev:employee": "pnpm --filter @andikisha/employee-service dev",
     "dev:payroll": "pnpm --filter @andikisha/payroll-service dev",
     "dev:compliance": "pnpm --filter @andikisha/compliance-service dev",
+    "dev:health": "pnpm --filter @andikisha/health-aggregator-service dev",
     "dev:all": "pnpm --filter \"./services/**\" dev",
     "build": "pnpm --filter \"./services/**\" build",
     "test": "pnpm --filter \"./services/**\" test",

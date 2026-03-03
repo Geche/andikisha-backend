@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Auth Service
+  auth-postgres:
+    image: postgres:15-alpine
+    container_name: andikisha-auth-postgres
+    restart: unless-stopped
+    ports:
+      - '5433:5432' # External port 5433 to avoid conflict with main postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_service_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d auth_service_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - auth-network
+
+  # Auth Service (gRPC Server)
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: andikisha-auth-service
+    restart: unless-stopped
+    ports:
+      - '5002:5002' # gRPC port
+      - '3002:3002' # HTTP port (if needed)
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@auth-postgres:5432/auth_service_db
+      GRPC_PORT: 5002
+      PORT: 3002
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-15m}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-7d}
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+    networks:
+      - auth-network
+      - andikisha-network # Connect to main network for inter-service communication
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        npm run start:prod
+      "
+
+volumes:
+  auth_postgres_data:
+    driver: local
+
+networks:
+  auth-network:
+    driver: bridge
+  andikisha-network:
+    external: true # Assumes main network exists from root docker-compose

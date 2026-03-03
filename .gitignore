@@ -466,7 +466,7 @@ debug.log
 # ================================
 
 # Generated documentation
-docs/generated/
+../docs/generated/
 .docusaurus/
 storybook-static/
 

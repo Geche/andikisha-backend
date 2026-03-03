@@ -1,0 +1,559 @@
+syntax = "proto3";
+
+package employee;
+
+// ============================================================================
+// EMPLOYEE SERVICE
+// ============================================================================
+
+service EmployeeService {
+  // Employee CRUD Operations
+  rpc CreateEmployee (CreateEmployeeRequest) returns (EmployeeResponse);
+  rpc GetEmployeeById (GetEmployeeByIdRequest) returns (EmployeeResponse);
+  rpc GetEmployeeByNumber (GetEmployeeByNumberRequest) returns (EmployeeResponse);
+  rpc UpdateEmployee (UpdateEmployeeRequest) returns (EmployeeResponse);
+  rpc DeleteEmployee (DeleteEmployeeRequest) returns (DeleteEmployeeResponse);
+  rpc ListEmployees (ListEmployeesRequest) returns (ListEmployeesResponse);
+
+  // Department Operations
+  rpc CreateDepartment (CreateDepartmentRequest) returns (DepartmentResponse);
+  rpc GetDepartmentById (GetDepartmentByIdRequest) returns (DepartmentResponse);
+  rpc UpdateDepartment (UpdateDepartmentRequest) returns (DepartmentResponse);
+  rpc DeleteDepartment (DeleteDepartmentRequest) returns (DeleteDepartmentResponse);
+  rpc ListDepartments (ListDepartmentsRequest) returns (ListDepartmentsResponse);
+
+  // Position Operations
+  rpc CreatePosition (CreatePositionRequest) returns (PositionResponse);
+  rpc GetPositionById (GetPositionByIdRequest) returns (PositionResponse);
+  rpc UpdatePosition (UpdatePositionRequest) returns (PositionResponse);
+  rpc DeletePosition (DeletePositionRequest) returns (DeletePositionResponse);
+  rpc ListPositions (ListPositionsRequest) returns (ListPositionsResponse);
+
+  // Emergency Contact Operations
+  rpc AddEmergencyContact (AddEmergencyContactRequest) returns (EmergencyContactResponse);
+  rpc UpdateEmergencyContact (UpdateEmergencyContactRequest) returns (EmergencyContactResponse);
+  rpc DeleteEmergencyContact (DeleteEmergencyContactRequest) returns (DeleteEmergencyContactResponse);
+
+  // Bank Account Operations
+  rpc AddBankAccount (AddBankAccountRequest) returns (BankAccountResponse);
+  rpc UpdateBankAccount (UpdateBankAccountRequest) returns (BankAccountResponse);
+  rpc DeleteBankAccount (DeleteBankAccountRequest) returns (DeleteBankAccountResponse);
+  rpc SetPrimaryBankAccount (SetPrimaryBankAccountRequest) returns (BankAccountResponse);
+}
+
+// ============================================================================
+// EMPLOYEE MESSAGES
+// ============================================================================
+
+message CreateEmployeeRequest {
+  string tenant_id = 1;
+  string user_id = 2;
+
+  // Personal Information
+  string employee_number = 3;
+  string first_name = 4;
+  string middle_name = 5;
+  string last_name = 6;
+  string email = 7;
+  string phone_number = 8;
+  string alternate_phone = 9;
+  string date_of_birth = 10; // ISO 8601 format
+  Gender gender = 11;
+  MaritalStatus marital_status = 12;
+  string nationality = 13;
+  string national_id = 14;
+  string passport_number = 15;
+  string tax_id = 16;
+  string nssf_number = 17;
+  string nhif_number = 18;
+
+  // Address
+  string address_line1 = 19;
+  string address_line2 = 20;
+  string city = 21;
+  string state = 22;
+  string postal_code = 23;
+  string country = 24;
+
+  // Employment
+  string department_id = 25;
+  string position_id = 26;
+  EmploymentType employment_type = 27;
+  string hire_date = 28; // ISO 8601 format
+  string probation_end_date = 29;
+  string manager_id = 30;
+  WorkSchedule work_schedule = 31;
+  string work_location = 32;
+}
+
+message UpdateEmployeeRequest {
+  string id = 1;
+  string tenant_id = 2;
+
+  // Personal Information (optional fields)
+  optional string first_name = 3;
+  optional string middle_name = 4;
+  optional string last_name = 5;
+  optional string email = 6;
+  optional string phone_number = 7;
+  optional string alternate_phone = 8;
+  optional Gender gender = 9;
+  optional MaritalStatus marital_status = 10;
+  optional string national_id = 11;
+  optional string passport_number = 12;
+  optional string tax_id = 13;
+  optional string nssf_number = 14;
+  optional string nhif_number = 15;
+
+  // Address
+  optional string address_line1 = 16;
+  optional string address_line2 = 17;
+  optional string city = 18;
+  optional string state = 19;
+  optional string postal_code = 20;
+  optional string country = 21;
+
+  // Employment
+  optional string department_id = 22;
+  optional string position_id = 23;
+  optional EmploymentType employment_type = 24;
+  optional EmploymentStatus employment_status = 25;
+  optional string confirmation_date = 26;
+  optional string manager_id = 27;
+  optional WorkSchedule work_schedule = 28;
+  optional string work_location = 29;
+}
+
+message GetEmployeeByIdRequest {
+  string id = 1;
+  string tenant_id = 2;
+}
+
+message GetEmployeeByNumberRequest {
+  string employee_number = 1;
+  string tenant_id = 2;
+}
+
+message DeleteEmployeeRequest {
+  string id = 1;
+  string tenant_id = 2;
+  string termination_reason = 3;
+  string termination_date = 4; // ISO 8601 format
+}
+
+message ListEmployeesRequest {
+  string tenant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string sort_by = 4;
+  string sort_order = 5;
+
+  // Filters
+  optional string department_id = 6;
+  optional string position_id = 7;
+  optional EmploymentStatus employment_status = 8;
+  optional string search = 9; // Search by name, email, employee number
+}
+
+message EmployeeResponse {
+  Employee employee = 1;
+}
+
+message ListEmployeesResponse {
+  repeated Employee employees = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  int32 total_pages = 5;
+}
+
+message DeleteEmployeeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message Employee {
+  string id = 1;
+  string tenant_id = 2;
+  string user_id = 3;
+
+  // Personal Information
+  string employee_number = 4;
+  string first_name = 5;
+  string middle_name = 6;
+  string last_name = 7;
+  string email = 8;
+  string phone_number = 9;
+  string alternate_phone = 10;
+  string date_of_birth = 11;
+  Gender gender = 12;
+  MaritalStatus marital_status = 13;
+  string nationality = 14;
+  string national_id = 15;
+  string passport_number = 16;
+  string tax_id = 17;
+  string nssf_number = 18;
+  string nhif_number = 19;
+
+  // Address
+  string address_line1 = 20;
+  string address_line2 = 21;
+  string city = 22;
+  string state = 23;
+  string postal_code = 24;
+  string country = 25;
+
+  // Employment
+  string department_id = 26;
+  string position_id = 27;
+  EmploymentType employment_type = 28;
+  EmploymentStatus employment_status = 29;
+  string hire_date = 30;
+  string confirmation_date = 31;
+  string probation_end_date = 32;
+  string termination_date = 33;
+  string termination_reason = 34;
+  string manager_id = 35;
+  WorkSchedule work_schedule = 36;
+  string work_location = 37;
+
+  // Related data
+  Department department = 38;
+  Position position = 39;
+  Employee manager = 40;
+  repeated EmergencyContact emergency_contacts = 41;
+  repeated BankAccount bank_accounts = 42;
+
+  // Timestamps
+  string created_at = 43;
+  string updated_at = 44;
+}
+
+// ============================================================================
+// DEPARTMENT MESSAGES
+// ============================================================================
+
+message CreateDepartmentRequest {
+  string tenant_id = 1;
+  string name = 2;
+  string code = 3;
+  string description = 4;
+  string manager_id = 5;
+  string parent_id = 6;
+}
+
+message UpdateDepartmentRequest {
+  string id = 1;
+  string tenant_id = 2;
+  optional string name = 3;
+  optional string description = 4;
+  optional string manager_id = 5;
+  optional string parent_id = 6;
+  optional bool is_active = 7;
+}
+
+message GetDepartmentByIdRequest {
+  string id = 1;
+  string tenant_id = 2;
+}
+
+message DeleteDepartmentRequest {
+  string id = 1;
+  string tenant_id = 2;
+}
+
+message ListDepartmentsRequest {
+  string tenant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional bool is_active = 4;
+  optional string parent_id = 5;
+}
+
+message DepartmentResponse {
+  Department department = 1;
+}
+
+message ListDepartmentsResponse {
+  repeated Department departments = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  int32 total_pages = 5;
+}
+
+message DeleteDepartmentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message Department {
+  string id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  string code = 4;
+  string description = 5;
+  string manager_id = 6;
+  string parent_id = 7;
+  bool is_active = 8;
+  string created_at = 9;
+  string updated_at = 10;
+
+  // Related data
+  repeated Department children = 11;
+  int32 employee_count = 12;
+}
+
+// ============================================================================
+// POSITION MESSAGES
+// ============================================================================
+
+message CreatePositionRequest {
+  string tenant_id = 1;
+  string title = 2;
+  string code = 3;
+  string description = 4;
+  string department_id = 5;
+  int32 level = 6;
+  double min_salary = 7;
+  double max_salary = 8;
+}
+
+message UpdatePositionRequest {
+  string id = 1;
+  string tenant_id = 2;
+  optional string title = 3;
+  optional string description = 4;
+  optional string department_id = 5;
+  optional int32 level = 6;
+  optional double min_salary = 7;
+  optional double max_salary = 8;
+  optional bool is_active = 9;
+}
+
+message GetPositionByIdRequest {
+  string id = 1;
+  string tenant_id = 2;
+}
+
+message DeletePositionRequest {
+  string id = 1;
+  string tenant_id = 2;
+}
+
+message ListPositionsRequest {
+  string tenant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional bool is_active = 4;
+  optional string department_id = 5;
+}
+
+message PositionResponse {
+  Position position = 1;
+}
+
+message ListPositionsResponse {
+  repeated Position positions = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  int32 total_pages = 5;
+}
+
+message DeletePositionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message Position {
+  string id = 1;
+  string tenant_id = 2;
+  string title = 3;
+  string code = 4;
+  string description = 5;
+  string department_id = 6;
+  int32 level = 7;
+  double min_salary = 8;
+  double max_salary = 9;
+  bool is_active = 10;
+  string created_at = 11;
+  string updated_at = 12;
+
+  // Related data
+  Department department = 13;
+  int32 employee_count = 14;
+}
+
+// ============================================================================
+// EMERGENCY CONTACT MESSAGES
+// ============================================================================
+
+message AddEmergencyContactRequest {
+  string employee_id = 1;
+  string tenant_id = 2;
+  string full_name = 3;
+  string relationship = 4;
+  string phone_number = 5;
+  string alternate_phone = 6;
+  string email = 7;
+  string address = 8;
+  bool is_primary = 9;
+}
+
+message UpdateEmergencyContactRequest {
+  string id = 1;
+  string employee_id = 2;
+  string tenant_id = 3;
+  optional string full_name = 4;
+  optional string relationship = 5;
+  optional string phone_number = 6;
+  optional string alternate_phone = 7;
+  optional string email = 8;
+  optional string address = 9;
+  optional bool is_primary = 10;
+}
+
+message DeleteEmergencyContactRequest {
+  string id = 1;
+  string employee_id = 2;
+  string tenant_id = 3;
+}
+
+message EmergencyContactResponse {
+  EmergencyContact emergency_contact = 1;
+}
+
+message DeleteEmergencyContactResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message EmergencyContact {
+  string id = 1;
+  string employee_id = 2;
+  string full_name = 3;
+  string relationship = 4;
+  string phone_number = 5;
+  string alternate_phone = 6;
+  string email = 7;
+  string address = 8;
+  bool is_primary = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+// ============================================================================
+// BANK ACCOUNT MESSAGES
+// ============================================================================
+
+message AddBankAccountRequest {
+  string employee_id = 1;
+  string tenant_id = 2;
+  string bank_name = 3;
+  string branch_name = 4;
+  string account_number = 5;
+  string account_name = 6;
+  string swift_code = 7;
+  string currency = 8;
+  bool is_primary = 9;
+}
+
+message UpdateBankAccountRequest {
+  string id = 1;
+  string employee_id = 2;
+  string tenant_id = 3;
+  optional string bank_name = 4;
+  optional string branch_name = 5;
+  optional string account_number = 6;
+  optional string account_name = 7;
+  optional string swift_code = 8;
+  optional string currency = 9;
+}
+
+message DeleteBankAccountRequest {
+  string id = 1;
+  string employee_id = 2;
+  string tenant_id = 3;
+}
+
+message SetPrimaryBankAccountRequest {
+  string id = 1;
+  string employee_id = 2;
+  string tenant_id = 3;
+}
+
+message BankAccountResponse {
+  BankAccount bank_account = 1;
+}
+
+message DeleteBankAccountResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message BankAccount {
+  string id = 1;
+  string employee_id = 2;
+  string bank_name = 3;
+  string branch_name = 4;
+  string account_number = 5;
+  string account_name = 6;
+  string swift_code = 7;
+  string currency = 8;
+  bool is_primary = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Gender {
+  GENDER_UNSPECIFIED = 0;
+  MALE = 1;
+  FEMALE = 2;
+  OTHER = 3;
+  PREFER_NOT_TO_SAY = 4;
+}
+
+enum MaritalStatus {
+  MARITAL_STATUS_UNSPECIFIED = 0;
+  SINGLE = 1;
+  MARRIED = 2;
+  DIVORCED = 3;
+  WIDOWED = 4;
+  SEPARATED = 5;
+}
+
+enum EmploymentType {
+  EMPLOYMENT_TYPE_UNSPECIFIED = 0;
+  FULL_TIME = 1;
+  PART_TIME = 2;
+  CONTRACT = 3;
+  TEMPORARY = 4;
+  INTERN = 5;
+  CONSULTANT = 6;
+}
+
+enum EmploymentStatus {
+  EMPLOYMENT_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  PROBATION = 2;
+  ON_LEAVE = 3;
+  SUSPENDED = 4;
+  TERMINATED = 5;
+  RESIGNED = 6;
+  RETIRED = 7;
+}
+
+enum WorkSchedule {
+  WORK_SCHEDULE_UNSPECIFIED = 0;
+  FULL_TIME_SCHEDULE = 1;
+  PART_TIME_SCHEDULE = 2;
+  FLEXIBLE = 3;
+  REMOTE = 4;
+  HYBRID = 5;
+  SHIFT = 6;
+}

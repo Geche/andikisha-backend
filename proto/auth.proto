@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package auth;
+
+// Auth Service - Handles authentication and authorization
+service AuthService {
+  // Register a new user
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+
+  // Login a user and get JWT tokens
+  rpc Login (LoginRequest) returns (LoginResponse);
+
+  // Refresh access token using refresh token
+  rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // Validate an access token
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  // Logout a user (revoke tokens)
+  rpc Logout (LogoutRequest) returns (LogoutResponse);
+
+  // Get user by ID
+  rpc GetUserById (GetUserByIdRequest) returns (UserResponse);
+}
+
+// Request/Response messages for Register
+message RegisterRequest {
+  string tenant_id = 1;
+  string email = 2;
+  string password = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string phone_number = 6;
+  repeated string role_names = 7; // e.g., ["admin", "hr_manager"]
+}
+
+message RegisterResponse {
+  string user_id = 1;
+  string email = 2;
+  string message = 3;
+}
+
+// Request/Response messages for Login
+message LoginRequest {
+  string tenant_id = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3; // seconds
+  User user = 4;
+}
+
+// Request/Response messages for RefreshToken
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+}
+
+// Request/Response messages for ValidateToken
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateTokenResponse {
+  bool is_valid = 1;
+  string user_id = 2;
+  string tenant_id = 3;
+  repeated string roles = 4;
+  repeated string permissions = 5;
+}
+
+// Request/Response messages for Logout
+message LogoutRequest {
+  string access_token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request/Response messages for GetUserById
+message GetUserByIdRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+}
+
+message UserResponse {
+  User user = 1;
+}
+
+// User message - represents a user entity
+message User {
+  string id = 1;
+  string tenant_id = 2;
+  string email = 3;
+  string username = 4;
+  string first_name = 5;
+  string last_name = 6;
+  string phone_number = 7;
+  bool is_active = 8;
+  bool email_verified = 9;
+  repeated string roles = 10;
+}

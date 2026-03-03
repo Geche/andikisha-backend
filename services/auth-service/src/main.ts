@@ -1,0 +1,20 @@
+import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+    transport: Transport.GRPC,
+    options: {
+      package: 'auth',
+      protoPath: join(__dirname, '../../../proto/auth.proto'),
+      url: `0.0.0.0:${process.env.GRPC_PORT || 5002}`,
+    },
+  });
+
+  await app.listen();
+  console.log(`Auth Service (gRPC) is running on port ${process.env.GRPC_PORT || 5002}`);
+}
+
+bootstrap();

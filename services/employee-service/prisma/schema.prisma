@@ -1,0 +1,334 @@
+// Employee Service Database Schema
+// This service manages employee data, departments, positions, and employment history
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// EMPLOYEE MODELS
+// ============================================================================
+
+model Employee {
+  id                String    @id @default(uuid())
+  tenantId          String    @map("tenant_id")
+
+  // User Reference (from Auth Service)
+  userId            String?   @map("user_id")
+
+  // Personal Information
+  employeeNumber    String    @map("employee_number")
+  firstName         String    @map("first_name")
+  middleName        String?   @map("middle_name")
+  lastName          String    @map("last_name")
+  email             String
+  phoneNumber       String    @map("phone_number")
+  alternatePhone    String?   @map("alternate_phone")
+  dateOfBirth       DateTime  @map("date_of_birth")
+  gender            Gender
+  maritalStatus     MaritalStatus @default(SINGLE) @map("marital_status")
+  nationality       String
+  nationalId        String?   @map("national_id")
+  passportNumber    String?   @map("passport_number")
+  taxId             String?   @map("tax_id") // KRA PIN for Kenya
+  nssfNumber        String?   @map("nssf_number") // NSSF number for Kenya
+  nhifNumber        String?   @map("nhif_number") // NHIF number for Kenya
+
+  // Address Information
+  addressLine1      String    @map("address_line1")
+  addressLine2      String?   @map("address_line2")
+  city              String
+  state             String?
+  postalCode        String?   @map("postal_code")
+  country           String    @default("Kenya")
+
+  // Employment Information
+  departmentId      String?   @map("department_id")
+  positionId        String?   @map("position_id")
+  employmentType    EmploymentType @map("employment_type")
+  employmentStatus  EmploymentStatus @default(ACTIVE) @map("employment_status")
+  hireDate          DateTime  @map("hire_date")
+  confirmationDate  DateTime? @map("confirmation_date")
+  probationEndDate  DateTime? @map("probation_end_date")
+  terminationDate   DateTime? @map("termination_date")
+  terminationReason String?   @map("termination_reason")
+
+  // Reporting Structure
+  managerId         String?   @map("manager_id")
+
+  // Work Schedule
+  workSchedule      WorkSchedule @default(FULL_TIME) @map("work_schedule")
+  workLocation      String?   @map("work_location")
+
+  // Timestamps
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  department        Department?     @relation(fields: [departmentId], references: [id])
+  position          Position?       @relation(fields: [positionId], references: [id])
+  manager           Employee?       @relation("EmployeeManager", fields: [managerId], references: [id])
+  subordinates      Employee[]      @relation("EmployeeManager")
+  emergencyContacts EmergencyContact[]
+  bankAccounts      BankAccount[]
+  employmentHistory EmploymentHistory[]
+  documents         Document[]
+
+  // Unique constraints with tenant isolation
+  @@unique([tenantId, employeeNumber])
+  @@unique([tenantId, email])
+  @@unique([userId]) // User can only be linked to one employee across all tenants
+
+  // Single-column indexes
+  @@index([tenantId])
+  @@index([employeeNumber])
+  @@index([email])
+
+  // Composite indexes for common query patterns
+  @@index([tenantId, employmentStatus])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, positionId])
+  @@index([tenantId, departmentId, employmentStatus])
+  @@index([tenantId, managerId])
+  @@index([tenantId, hireDate])
+  @@index([tenantId, email, employmentStatus])
+
+  @@map("employees")
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+
+  name        String
+  code        String
+  description String?
+  managerId   String?  @map("manager_id")
+  parentId    String?  @map("parent_id")
+  isActive    Boolean  @default(true) @map("is_active")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  employees   Employee[]
+  positions   Position[]
+  parent      Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children    Department[] @relation("DepartmentHierarchy")
+
+  // Unique constraints with tenant isolation
+  @@unique([tenantId, code])
+  @@unique([tenantId, name])
+
+  // Indexes for common queries
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, parentId])
+  @@index([parentId])
+
+  @@map("departments")
+}
+
+model Position {
+  id              String   @id @default(uuid())
+  tenantId        String   @map("tenant_id")
+
+  title           String
+  code            String
+  description     String?
+  departmentId    String?  @map("department_id")
+  level           Int      @default(1) // Job level/grade
+  isActive        Boolean  @default(true) @map("is_active")
+
+  // Salary Range
+  minSalary       Decimal? @map("min_salary") @db.Decimal(15, 2)
+  maxSalary       Decimal? @map("max_salary") @db.Decimal(15, 2)
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  department      Department? @relation(fields: [departmentId], references: [id])
+  employees       Employee[]
+
+  // Unique constraints with tenant isolation
+  @@unique([tenantId, code])
+  @@unique([tenantId, title])
+
+  // Indexes for common queries
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, level])
+  @@index([departmentId])
+
+  @@map("positions")
+}
+
+model EmergencyContact {
+  id           String   @id @default(uuid())
+  employeeId   String   @map("employee_id")
+
+  fullName     String   @map("full_name")
+  relationship String
+  phoneNumber  String   @map("phone_number")
+  alternatePhone String? @map("alternate_phone")
+  email        String?
+  address      String?
+  isPrimary    Boolean  @default(false) @map("is_primary")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("emergency_contacts")
+}
+
+model BankAccount {
+  id             String   @id @default(uuid())
+  employeeId     String   @map("employee_id")
+
+  bankName       String   @map("bank_name")
+  branchName     String?  @map("branch_name")
+  accountNumber  String   @map("account_number")
+  accountName    String   @map("account_name")
+  swiftCode      String?  @map("swift_code")
+  currency       String   @default("KES")
+  isPrimary      Boolean  @default(false) @map("is_primary")
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("bank_accounts")
+}
+
+model EmploymentHistory {
+  id              String   @id @default(uuid())
+  employeeId      String   @map("employee_id")
+
+  departmentId    String?  @map("department_id")
+  positionId      String?  @map("position_id")
+  changeType      EmploymentChangeType @map("change_type")
+  changeReason    String?  @map("change_reason")
+  effectiveDate   DateTime @map("effective_date")
+  notes           String?
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  createdBy       String?  @map("created_by")
+
+  // Relations
+  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([effectiveDate])
+  @@map("employment_history")
+}
+
+model Document {
+  id              String   @id @default(uuid())
+  employeeId      String   @map("employee_id")
+
+  documentType    DocumentType @map("document_type")
+  title           String
+  description     String?
+  fileUrl         String   @map("file_url") // MinIO path
+  fileName        String   @map("file_name")
+  fileSize        Int      @map("file_size") // in bytes
+  mimeType        String   @map("mime_type")
+
+  uploadedAt      DateTime @default(now()) @map("uploaded_at")
+  uploadedBy      String   @map("uploaded_by")
+
+  // Relations
+  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([documentType])
+  @@map("documents")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  SEPARATED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  TEMPORARY
+  INTERN
+  CONSULTANT
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  PROBATION
+  ON_LEAVE
+  SUSPENDED
+  TERMINATED
+  RESIGNED
+  RETIRED
+}
+
+enum WorkSchedule {
+  FULL_TIME      // 40 hours/week
+  PART_TIME      // Less than 40 hours/week
+  FLEXIBLE       // Flexible hours
+  REMOTE         // Remote work
+  HYBRID         // Hybrid (office + remote)
+  SHIFT          // Shift work
+}
+
+enum EmploymentChangeType {
+  HIRE
+  PROMOTION
+  DEMOTION
+  TRANSFER
+  DEPARTMENT_CHANGE
+  POSITION_CHANGE
+  SALARY_ADJUSTMENT
+  STATUS_CHANGE
+  TERMINATION
+}
+
+enum DocumentType {
+  CONTRACT
+  ID_COPY
+  PASSPORT
+  CV_RESUME
+  CERTIFICATE
+  DIPLOMA
+  DEGREE
+  OFFER_LETTER
+  TERMINATION_LETTER
+  PERFORMANCE_REVIEW
+  OTHER
+}

@@ -1,0 +1,151 @@
+// This is your Prisma schema file for Auth Service
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - Core user entity
+model User {
+  id            String    @id @default(uuid())
+  tenantId      String
+  email         String
+  username      String?
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phoneNumber   String?
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  roles         UserRole[]
+  sessions      Session[]
+  refreshTokens RefreshToken[]
+
+  // Unique constraints with tenant isolation
+  @@unique([tenantId, email])
+  @@unique([tenantId, username])
+
+  // Indexes for common query patterns
+  @@index([tenantId])
+  @@index([email])
+  @@index([tenantId, email])
+  @@index([tenantId, isActive])
+
+  @@map("users")
+}
+
+// Role model - User roles for RBAC
+model Role {
+  id           String   @id @default(uuid())
+  tenantId     String?  // null for system roles
+  name         String
+  description  String?
+  isSystemRole Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("roles")
+}
+
+// Permission model - Granular permissions
+model Permission {
+  id          String   @id @default(uuid())
+  resource    String   // e.g., "employee", "payroll", "reports"
+  action      String   // e.g., "create", "read", "update", "delete"
+  description String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  roles RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+// UserRole join table - Many-to-many relationship between User and Role
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// RolePermission join table - Many-to-many relationship between Role and Permission
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// Session model - Active user sessions for tracking
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  lastActivity DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// RefreshToken model - JWT refresh tokens
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

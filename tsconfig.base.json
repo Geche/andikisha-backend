@@ -17,9 +17,12 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "useDefineForClassFields": false,
     "paths": {
       "@andikisha/common": ["libs/common/src"],
+      "@andikisha/config": ["libs/config/src"],
       "@andikisha/database": ["libs/database/src"],
+      "@andikisha/health": ["libs/health/src"],
       "@andikisha/rabbitmq": ["libs/rabbitmq/src"],
       "@andikisha/grpc": ["libs/grpc/src"],
       "@andikisha/api-gateway": ["services/api-gateway/src"],

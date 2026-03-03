@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Employee Service
+  employee-postgres:
+    image: postgres:15-alpine
+    container_name: andikisha-employee-postgres
+    restart: unless-stopped
+    ports:
+      - "5434:5432"  # External port 5434 to avoid conflict
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: employee_service_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - employee_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d employee_service_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - employee-network
+
+  # Employee Service (gRPC Server)
+  employee-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: andikisha-employee-service
+    restart: unless-stopped
+    ports:
+      - "5001:5001"  # gRPC port
+      - "3001:3001"  # HTTP port (if needed)
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@employee-postgres:5432/employee_service_db
+      GRPC_PORT: 5001
+      PORT: 3001
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672}
+    depends_on:
+      employee-postgres:
+        condition: service_healthy
+    networks:
+      - employee-network
+      - andikisha-network  # Connect to main network for inter-service communication
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        npm run start:prod
+      "
+
+volumes:
+  employee_postgres_data:
+    driver: local
+
+networks:
+  employee-network:
+    driver: bridge
+  andikisha-network:
+    external: true  # Assumes main network exists from root docker-compose

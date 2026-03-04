@@ -47,10 +47,20 @@ import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
     RedisCacheModule,
 
     // Rate Limiting Module
+    // Two tiers:
+    //   global — 100 req/60s, applied to all routes
+    //   auth   —   5 req/60s, applied explicitly to /auth/login and /auth/register
+    //              to prevent brute-force credential attacks
     ThrottlerModule.forRoot([
       {
+        name: 'global',
         ttl: parseInt(process.env.RATE_LIMIT_TTL || '60', 10) * 1000, // Convert to milliseconds
         limit: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+      },
+      {
+        name: 'auth',
+        ttl: 60000, // 1-minute window
+        limit: 5,   // 5 attempts per minute on auth endpoints
       },
     ]),
 

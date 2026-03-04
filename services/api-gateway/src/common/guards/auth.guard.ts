@@ -8,6 +8,7 @@ import {
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Reflector, SetMetadata } from '@nestjs/core';
+import * as crypto from 'crypto';
 import { JwtValidationService, JwtPayload } from '../services/jwt-validation.service';
 
 // Extend Express Request to include user
@@ -69,7 +70,10 @@ export class AuthGuard implements CanActivate {
 
     try {
       // Try to get validated payload from cache first
-      const cacheKey = `jwt:${token.substring(0, 32)}`; // Use token prefix as key
+      // Use SHA-256 of the full token as the cache key to prevent prefix-collision attacks.
+      // JWT tokens share identical base64 headers; using only the first 32 chars risks
+      // serving one user's validated payload to a different user with a similar token prefix.
+      const cacheKey = `jwt:${crypto.createHash('sha256').update(token).digest('hex')}`;
       let payload = await this.cacheManager.get<JwtPayload>(cacheKey);
 
       if (!payload) {

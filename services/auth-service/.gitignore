@@ -40,4 +40,8 @@ lerna-debug.log*
 .env.*.local
 
 # Prisma
-prisma/migrations
+# NOTE: prisma/migrations is intentionally NOT ignored here.
+# Migration files must be tracked in source control so the database schema
+# can be reproduced in production and CI/CD pipelines.
+# The root .gitignore already ignores only **/prisma/migrations/**/migration.sql
+# (the raw generated SQL), while keeping the migration folder structure tracked.

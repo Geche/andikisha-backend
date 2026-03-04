@@ -416,14 +416,36 @@ export class AuthService {
 
   /**
    * Validate password strength
+   *
+   * Enforces complexity rules required for multi-tenant SaaS:
+   * - Minimum 8 characters
+   * - At least one uppercase letter (A-Z)
+   * - At least one lowercase letter (a-z)
+   * - At least one digit (0-9)
+   * - At least one special character
+   *
    * @param password Password to validate
+   * @throws BadRequestException if any rule is violated
    */
   private validatePasswordStrength(password: string): void {
     if (password.length < 8) {
       throw new BadRequestException('Password must be at least 8 characters long');
     }
 
-    // Add more password validation rules as needed
-    // e.g., require uppercase, lowercase, numbers, special characters
+    if (!/[A-Z]/.test(password)) {
+      throw new BadRequestException('Password must contain at least one uppercase letter');
+    }
+
+    if (!/[a-z]/.test(password)) {
+      throw new BadRequestException('Password must contain at least one lowercase letter');
+    }
+
+    if (!/[0-9]/.test(password)) {
+      throw new BadRequestException('Password must contain at least one number');
+    }
+
+    if (!/[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?`~]/.test(password)) {
+      throw new BadRequestException('Password must contain at least one special character');
+    }
   }
 }

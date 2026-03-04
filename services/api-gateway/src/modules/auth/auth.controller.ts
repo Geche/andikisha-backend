@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Observable, firstValueFrom } from 'rxjs';
 import { RegisterDto, RegisterResponseDto } from './dto/register.dto';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
@@ -38,6 +39,7 @@ export class AuthController implements OnModuleInit {
   }
 
   @Public()
+  @Throttle({ auth: { ttl: 60000, limit: 5 } })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -63,6 +65,7 @@ export class AuthController implements OnModuleInit {
   }
 
   @Public()
+  @Throttle({ auth: { ttl: 60000, limit: 5 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

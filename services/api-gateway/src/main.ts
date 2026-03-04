@@ -42,51 +42,57 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger/OpenAPI Documentation
-  const config = new DocumentBuilder()
-    .setTitle('AndikishaHR API')
-    .setDescription(
-      'AndikishaHR API Gateway - Multi-tenant HR & Payroll Management System',
-    )
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controllers
-    )
-    .addApiKey(
-      {
-        type: 'apiKey',
-        name: 'X-Tenant-ID',
-        in: 'header',
-        description: 'Tenant ID for multi-tenant isolation',
-      },
-      'tenant-id',
-    )
-    .addTag('auth', 'Authentication and Authorization')
-    .addTag('employees', 'Employee Management')
-    .addTag('payroll', 'Payroll Processing')
-    .addTag('compliance', 'Compliance & Reporting')
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true, // Keep authorization between page refreshes
-    },
-  });
-
   const port = process.env.PORT || 3000;
+
+  // Swagger/OpenAPI Documentation — only in non-production environments.
+  // Exposing the full API schema, routes, and DTOs in production is a significant
+  // security risk (reconnaissance aid for attackers). Gate it here.
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('AndikishaHR API')
+      .setDescription(
+        'AndikishaHR API Gateway - Multi-tenant HR & Payroll Management System',
+      )
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token',
+          in: 'header',
+        },
+        'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controllers
+      )
+      .addApiKey(
+        {
+          type: 'apiKey',
+          name: 'X-Tenant-ID',
+          in: 'header',
+          description: 'Tenant ID for multi-tenant isolation',
+        },
+        'tenant-id',
+      )
+      .addTag('auth', 'Authentication and Authorization')
+      .addTag('employees', 'Employee Management')
+      .addTag('payroll', 'Payroll Processing')
+      .addTag('compliance', 'Compliance & Reporting')
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true, // Keep authorization between page refreshes
+      },
+    });
+
+    console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
+  }
+
   await app.listen(port);
 
   console.log(`🚀 API Gateway is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

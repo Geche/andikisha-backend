@@ -1,98 +1,191 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# API Gateway — AndikishaHR
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+The HTTP entry point for the AndikishaHR platform. All client traffic flows through this service, which authenticates requests, resolves tenant context, enforces rate limits, and proxies operations to backend microservices via gRPC.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Framework**: NestJS v11 | **Port**: `3000`
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Architecture
 
-## Project setup
-
-```bash
-$ pnpm install
+```
+Client → API Gateway (HTTP :3000)
+              │
+              ├── Local JWT validation (no gRPC round-trip)
+              ├── Redis token cache (SHA-256 keyed, 5 min TTL)
+              ├── Tenant middleware (X-Tenant-ID header / subdomain)
+              ├── Rate limiter (100 req/60s global, 5 req/60s auth)
+              │
+              ├── gRPC → Auth Service       (:5002)
+              └── gRPC → Employee Service   (:5001)
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ pnpm run start
+## API Endpoints
 
-# watch mode
-$ pnpm run start:dev
+### Auth — `POST /auth/*`
 
-# production mode
-$ pnpm run start:prod
+| Method | Path | Auth | Rate Limit | Description |
+|--------|------|------|------------|-------------|
+| `POST` | `/auth/register` | Public | 5/min | Register a new user |
+| `POST` | `/auth/login` | Public | 5/min | Login and receive JWT tokens |
+| `POST` | `/auth/refresh` | Public | — | Refresh access token |
+| `POST` | `/auth/logout` | Required | — | Revoke tokens and destroy session |
+
+### Employees — `GET|POST|PUT|DELETE /employees/*`
+
+All employee routes require a valid JWT and `X-Tenant-ID` header.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/employees` | Create employee |
+| `GET` | `/employees` | List employees (pagination + filters) |
+| `GET` | `/employees/:id` | Get employee by ID |
+| `GET` | `/employees/number/:employeeNumber` | Get employee by employee number |
+| `PUT` | `/employees/:id` | Update employee |
+| `DELETE` | `/employees/:id` | Terminate employee |
+
+### Observability
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/health` | Public | Full health status (Redis, gRPC, memory) |
+| `GET` | `/health/live` | Public | Liveness probe — is the process alive? |
+| `GET` | `/health/ready` | Public | Readiness probe — can traffic be served? |
+| `GET` | `/metrics` | Public | Prometheus metrics scrape endpoint |
+| `GET` | `/metrics/health` | Public | Metrics subsystem health check |
+| `GET` | `/api/docs` | Public | Swagger UI (non-production only) |
+
+---
+
+## Configuration
+
+Create a `.env` file in this directory:
+
+```env
+# Server
+NODE_ENV=development
+PORT=3000
+
+# JWT — must match the secret used in auth-service
+JWT_SECRET=your-secret-here
+JWT_ACCESS_TOKEN_EXPIRATION=15m
+
+# gRPC backends
+AUTH_GRPC_URL=localhost:5002
+EMPLOYEE_GRPC_URL=localhost:5001
+
+# Redis (used for JWT token cache and rate limiting)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=redis123
+
+# Rate limiting
+RATE_LIMIT_TTL=60      # window in seconds
+RATE_LIMIT_MAX=100     # max requests per window
+
+# CORS (comma-separated origins)
+CORS_ORIGINS=http://localhost:3000,http://localhost:4200
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ pnpm run test
+## Request Flow
 
-# e2e tests
-$ pnpm run test:e2e
+### Authentication
 
-# test coverage
-$ pnpm run test:cov
+JWT validation happens **locally** in the API Gateway using the shared `JWT_SECRET` — no gRPC call is made to the Auth Service on every request. Validated payloads are cached in Redis for 5 minutes (keyed by SHA-256 of the token).
+
+```
+Request with Bearer token
+  → Check Redis cache (sha256(token))
+    → Cache hit:  use cached payload (<1ms)
+    → Cache miss: verify JWT locally, store in Redis
+  → Attach user to request (id, email, tenantId, roles, permissions)
 ```
 
-## Deployment
+Public routes (register, login, refresh, health, metrics) bypass this flow via the `@Public()` decorator.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Multi-Tenancy
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+The `TenantMiddleware` resolves tenant context on every request in priority order:
+
+1. `X-Tenant-ID` request header _(primary)_
+2. URL path parameter (`:tenantId`)
+3. Subdomain (e.g. `acme.andikishaHR.com` → `acme`)
+
+Non-auth routes without a resolvable tenant ID return `400 Bad Request`.
+
+---
+
+## Local Development
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# From the monorepo root — start infrastructure first
+pnpm docker:up
+
+# Start the API Gateway in watch mode
+pnpm dev:gateway
+
+# Or from this directory
+pnpm dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Swagger UI is available at `http://localhost:3000/api/docs` when `NODE_ENV != production`.
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## Commands
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+pnpm dev              # Start in watch mode
+pnpm build            # Compile TypeScript
+pnpm start            # Run compiled output
+pnpm start:debug      # Start with Node debugger attached
+pnpm test             # Run unit tests
+pnpm test:cov         # Run tests with coverage report
+pnpm lint             # Lint and auto-fix
+pnpm format           # Prettier format
+```
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Health Checks
 
-## Stay in touch
+The `/health/ready` endpoint checks:
+- Redis connectivity
+- Heap memory < 400 MB
+- Auth Service gRPC reachable
+- Employee Service gRPC reachable
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+The `/health/live` endpoint returns `200 OK` as long as the process is running — used by Kubernetes to decide whether to restart the pod.
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Prometheus Metrics
+
+The `/metrics` endpoint exposes the following custom counters and histograms:
+
+| Metric | Type | Labels |
+|--------|------|--------|
+| `http_requests_total` | Counter | `method`, `route`, `status` |
+| `http_request_duration_seconds` | Histogram | `method`, `route`, `status` |
+| `auth_requests_total` | Counter | `status` |
+| `cache_operations_total` | Counter | `operation`, `result` |
+| `grpc_client_calls_total` | Counter | `service`, `method` |
+
+---
+
+## Key Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `@nestjs/jwt` | Local JWT verification |
+| `@nestjs/terminus` | Health check endpoints |
+| `@willsoto/nestjs-prometheus` | Prometheus metrics |
+| `@nestjs/throttler` | Rate limiting |
+| `@nestjs/swagger` | OpenAPI documentation |
+| `helmet` | HTTP security headers |
+| `compression` | Response compression |
+| `@andikisha/common` | Shared config validation, Redis cache module |
